@@ -429,21 +429,21 @@ LOGS_DIR = BASE_DIR / 'logs'
 if not LOGS_DIR.exists():
     LOGS_DIR.mkdir(parents=True, exist_ok=True)
 
-# S3 Storage Configuration
-if 'RENDER' in os.environ:
-    # Use S3 for media files in production
-    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-    
-    # S3 Configuration
-    AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
-    AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
-    AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
-    AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME', 'us-east-1')
-    
-    # Optional: Improve performance and reduce costs
-    AWS_S3_FILE_OVERWRITE = True
-    AWS_DEFAULT_ACL = None
-    AWS_QUERYSTRING_AUTH = False
-    
-    # Optional: Set a custom domain for your S3 bucket
-    # AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
+# S3 Storage Configuration - DISABLED: Using local media folder from Git instead
+# if 'RENDER' in os.environ:
+#     # Use S3 for media files in production
+#     DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+#     
+#     # S3 Configuration
+#     AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+#     AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+#     AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
+#     AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME', 'us-east-1')
+#     
+#     # Optional: Improve performance and reduce costs
+#     AWS_S3_FILE_OVERWRITE = True
+#     AWS_DEFAULT_ACL = None
+#     AWS_QUERYSTRING_AUTH = False
+#     
+#     # Optional: Set a custom domain for your S3 bucket
+#     # AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'

@@ -41,7 +41,7 @@ venv.bak/
 # db.sqlite3
 # db.sqlite3.backup
 staticfiles/
-media/
+# media/  # Commented out - we want media files in Git for Render deployment
 *.log
 
 # IDEs
