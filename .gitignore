@@ -35,8 +35,11 @@ venv.bak/
 *.log
 *.pot
 *.pyc
-db.sqlite3
-db.sqlite3.backup
+# NOTE: We intentionally commit db.sqlite3 so the Render deployment
+# has the full dataset without needing a separate DB migration step.
+# If you ever move fully to Postgres, you can re-add these ignores.
+# db.sqlite3
+# db.sqlite3.backup
 staticfiles/
 media/
 *.log

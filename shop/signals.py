@@ -134,10 +134,15 @@ def inherit_parent_attributes_for_new_category(sender, instance: Category, creat
     This ensures immediate availability of attributes on categories like "ساعت مردانه" or "ساعت زنانه"
     when the parent "ساعت" already defines them.
     """
-    if not created or not instance.parent:
+    # When loading fixtures (loaddata) Django calls save(..., raw=True).
+    # In that case we must not run any business logic or hit related fields.
+    if kwargs.get("raw"):
         return
 
-    parent_category = instance.parent
+    parent_category = getattr(instance, "parent", None)
+    if not created or not parent_category:
+        return
+
     parent_attrs = CategoryAttribute.objects.filter(category=parent_category)
     for parent_attr in parent_attrs:
         child_attr = _ensure_child_attribute(parent_attr, instance)
