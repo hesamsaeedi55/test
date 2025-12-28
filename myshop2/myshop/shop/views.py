@@ -1709,12 +1709,13 @@ def import_database_data(request):
     if request.method == 'POST':
         if not export_file:
             messages.error(request, 'Export file not found. Checked locations: ' + ', '.join([str(p) for p in possible_paths]))
-            return render(request, 'shop/import_data.html', {
+            return render(request, 'shop/import_data_public.html', {
                 'error': 'File not found',
                 'file_exists': False,
                 'file_path': 'Not found',
                 'file_size': '0 MB',
-                'checked_paths': [str(p) for p in possible_paths]
+                'checked_paths': [str(p) for p in possible_paths],
+                'base_dir': str(settings.BASE_DIR)
             })
         
         try:
@@ -1732,19 +1733,20 @@ def import_database_data(request):
             messages.error(request, f'❌ Import failed: {str(e)}')
             import traceback
             error_details = traceback.format_exc()
-            return render(request, 'shop/import_data.html', {
+            return render(request, 'shop/import_data_public.html', {
                 'error': str(e),
                 'details': error_details,
                 'file_exists': True,
                 'file_path': str(export_file),
-                'file_size': f'{export_file.stat().st_size / 1024 / 1024:.2f} MB' if export_file.exists() else '0 MB'
+                'file_size': f'{export_file.stat().st_size / 1024 / 1024:.2f} MB' if export_file.exists() else '0 MB',
+                'base_dir': str(settings.BASE_DIR)
             })
     
     # GET request - show import page
     file_exists = export_file is not None
     file_size = export_file.stat().st_size / 1024 / 1024 if file_exists else 0
     
-    return render(request, 'shop/import_data.html', {
+    return render(request, 'shop/import_data_public.html', {
         'file_exists': file_exists,
         'file_path': str(export_file) if export_file else 'Not found',
         'file_size': f'{file_size:.2f} MB',

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Import Database Data</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .alert {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        .alert-success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .alert-error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .alert-warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+        .info-box {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .info-box code {
+            background: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .btn-secondary {
+            background: #6c757d;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+        pre {
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            border: 1px solid #ddd;
+        }
+        details {
+            margin-top: 10px;
+        }
+        summary {
+            cursor: pointer;
+            color: #007bff;
+            font-weight: bold;
+        }
+        ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 Import Database Data</h1>
+        
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+        
+        <div class="info-box">
+            <h2>📋 Import Status</h2>
+            <p><strong>Export File:</strong> <code>{{ file_path }}</code></p>
+            <p><strong>File Exists:</strong> 
+                {% if file_exists %}
+                    <span style="color: green;">✅ Yes ({{ file_size }})</span>
+                {% else %}
+                    <span style="color: red;">❌ No</span>
+                {% endif %}
+            </p>
+            {% if base_dir %}
+            <p><strong>BASE_DIR:</strong> <code>{{ base_dir }}</code></p>
+            {% endif %}
+            {% if checked_paths %}
+            <details style="margin-top: 10px;">
+                <summary>🔍 Show checked paths</summary>
+                <ul style="margin-top: 10px;">
+                    {% for path in checked_paths %}
+                    <li><code>{{ path }}</code></li>
+                    {% endfor %}
+                </ul>
+            </details>
+            {% endif %}
+        </div>
+        
+        {% if error %}
+            <div class="alert alert-error">
+                <h3>❌ Error</h3>
+                <pre>{{ error }}</pre>
+                {% if details %}
+                <details>
+                    <summary>Full Error Details</summary>
+                    <pre style="max-height: 400px; overflow-y: auto;">{{ details }}</pre>
+                </details>
+                {% endif %}
+            </div>
+        {% endif %}
+        
+        {% if file_exists %}
+            <div class="alert alert-warning">
+                <h3>⚠️ Warning</h3>
+                <p>This will import data from <code>database_export.json</code> into your database.</p>
+                <ul>
+                    <li>Make sure migrations are up to date</li>
+                    <li>This will ADD data (won't delete existing data unless there are conflicts)</li>
+                    <li>The import may take a few minutes</li>
+                </ul>
+            </div>
+            
+            <form method="post" style="margin-top: 30px;">
+                {% csrf_token %}
+                <button type="submit">🚀 Start Import</button>
+                <a href="/" class="btn-secondary" style="padding: 15px 30px; color: white; text-decoration: none; border-radius: 5px;">Cancel</a>
+            </form>
+        {% else %}
+            <div class="alert alert-error">
+                <h3>❌ Export File Not Found</h3>
+                <p>The file <code>database_export.json</code> was not found.</p>
+                <p><strong>Please copy this information and share it:</strong></p>
+                <div class="info-box">
+                    <p><strong>BASE_DIR:</strong> <code>{{ base_dir }}</code></p>
+                    <p><strong>Checked paths:</strong></p>
+                    <ul>
+                        {% for path in checked_paths %}
+                        <li><code>{{ path }}</code></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>
+
