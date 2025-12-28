@@ -2,8 +2,7 @@ services:
   - type: web
     name: myshop2
     env: python
-    rootDir: myshop2/myshop
-    buildCommand: bash -c "cd myshop2/myshop && pip install --upgrade pip && pip install -r requirements.txt && python manage.py migrate --no-input && python manage.py collectstatic --no-input"
+    buildCommand: bash -c "cd myshop2/myshop && pwd && ls -la requirements.txt && pip install --upgrade pip && pip install -r requirements.txt && python manage.py migrate --no-input && python manage.py collectstatic --no-input"
     startCommand: bash -c "cd myshop2/myshop && gunicorn myshop.wsgi:application --bind 0.0.0.0:$PORT"
     envVars:
       - key: PYTHON_VERSION
