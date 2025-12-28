@@ -1722,28 +1722,8 @@ def import_database_data(request):
             # Run migrations first
             call_command('migrate', verbosity=0)
             
-            # Clear all data using SQL TRUNCATE
-            from django.db import connection
-            
-            try:
-                with connection.cursor() as cursor:
-                    # Get all table names (excluding Django system tables)
-                    cursor.execute("""
-                        SELECT tablename FROM pg_tables 
-                        WHERE schemaname = 'public' 
-                        AND tablename NOT LIKE 'django_%'
-                        AND tablename NOT IN ('pg_stat_statements')
-                    """)
-                    tables = [row[0] for row in cursor.fetchall()]
-                    
-                    if tables:
-                        # TRUNCATE all tables (CASCADE handles foreign keys automatically)
-                        # RESTART IDENTITY resets auto-increment counters
-                        table_list = ', '.join([f'"{table}"' for table in tables])
-                        cursor.execute(f'TRUNCATE TABLE {table_list} RESTART IDENTITY CASCADE;')
-            except Exception as truncate_error:
-                # If TRUNCATE fails, try Django's flush as fallback
-                call_command('flush', '--no-input', verbosity=0)
+            # Clear all data - use flush (works for both SQLite and PostgreSQL)
+            call_command('flush', '--no-input', verbosity=0)
             
             # Import data
             call_command('loaddata', str(export_file), verbosity=1)
