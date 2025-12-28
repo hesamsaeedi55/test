@@ -1722,13 +1722,32 @@ def import_database_data(request):
             # Run migrations first
             call_command('migrate', verbosity=0)
             
-            # Clear existing data using Django's flush command
-            # This is simpler and doesn't require special permissions
-            call_command('flush', '--no-input', verbosity=0)
+            # Clear all data using SQL TRUNCATE (more reliable than flush)
+            from django.db import connection
             
-            # Import data - the export file was created with --natural-foreign --natural-primary
-            # so it should work without conflicts after flush
-            result = call_command('loaddata', str(export_file), verbosity=2)
+            with connection.cursor() as cursor:
+                # Get all table names
+                cursor.execute("""
+                    SELECT tablename FROM pg_tables 
+                    WHERE schemaname = 'public' 
+                    AND tablename NOT LIKE 'django_%'
+                    AND tablename NOT IN ('pg_stat_statements')
+                """)
+                tables = [row[0] for row in cursor.fetchall()]
+                
+                if tables:
+                    # Disable triggers temporarily
+                    cursor.execute("SET session_replication_role = 'replica';")
+                    
+                    # TRUNCATE all tables (CASCADE handles foreign keys)
+                    table_list = ', '.join([f'"{table}"' for table in tables])
+                    cursor.execute(f'TRUNCATE TABLE {table_list} RESTART IDENTITY CASCADE;')
+                    
+                    # Re-enable triggers
+                    cursor.execute("SET session_replication_role = 'origin';")
+            
+            # Import data
+            call_command('loaddata', str(export_file), verbosity=1)
             
             messages.success(request, '✅ Database cleared and data imported successfully!')
             return redirect('/')
