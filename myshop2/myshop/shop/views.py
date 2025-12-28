@@ -1726,7 +1726,7 @@ def import_database_data(request):
             from django.db import connection
             
             with connection.cursor() as cursor:
-                # Get all table names
+                # Get all table names (excluding Django system tables)
                 cursor.execute("""
                     SELECT tablename FROM pg_tables 
                     WHERE schemaname = 'public' 
@@ -1736,15 +1736,10 @@ def import_database_data(request):
                 tables = [row[0] for row in cursor.fetchall()]
                 
                 if tables:
-                    # Disable triggers temporarily
-                    cursor.execute("SET session_replication_role = 'replica';")
-                    
-                    # TRUNCATE all tables (CASCADE handles foreign keys)
+                    # TRUNCATE all tables (CASCADE handles foreign keys automatically)
+                    # RESTART IDENTITY resets auto-increment counters
                     table_list = ', '.join([f'"{table}"' for table in tables])
                     cursor.execute(f'TRUNCATE TABLE {table_list} RESTART IDENTITY CASCADE;')
-                    
-                    # Re-enable triggers
-                    cursor.execute("SET session_replication_role = 'origin';")
             
             # Import data
             call_command('loaddata', str(export_file), verbosity=1)
