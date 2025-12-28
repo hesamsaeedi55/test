@@ -1722,10 +1722,48 @@ def import_database_data(request):
             # Run migrations first
             call_command('migrate', verbosity=0)
             
+            # Clear existing data to avoid conflicts
+            from django.apps import apps
+            from django.db import connection, transaction
+            
+            messages.info(request, '🔄 Clearing existing data...')
+            
+            # Get all models from all apps (excluding system apps)
+            models_to_clear = []
+            skip_apps = ['contenttypes', 'sessions', 'admin', 'auth', 'sites']
+            
+            for app_config in apps.get_app_configs():
+                if app_config.label in skip_apps:
+                    continue
+                for model in app_config.get_models():
+                    models_to_clear.append(model)
+            
+            # Clear data in transaction
+            with transaction.atomic():
+                # Disable foreign key checks temporarily (PostgreSQL)
+                with connection.cursor() as cursor:
+                    cursor.execute("SET session_replication_role = 'replica';")
+                
+                # Delete from all tables (Django handles foreign key constraints)
+                for model in reversed(models_to_clear):
+                    try:
+                        count = model.objects.all().count()
+                        if count > 0:
+                            model.objects.all().delete()
+                    except Exception:
+                        # Ignore errors for tables that don't exist or have issues
+                        pass
+                
+                # Re-enable foreign key checks
+                with connection.cursor() as cursor:
+                    cursor.execute("SET session_replication_role = 'origin';")
+            
+            messages.info(request, '📥 Importing data from export file...')
+            
             # Import data
             call_command('loaddata', str(export_file), verbosity=1)
             
-            messages.success(request, '✅ Database data imported successfully!')
+            messages.success(request, '✅ Database cleared and data imported successfully!')
             # Redirect to home instead of admin (since admin might not exist yet)
             return redirect('/')
             
