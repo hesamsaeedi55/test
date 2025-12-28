@@ -78,6 +78,10 @@ def propagate_category_attribute_to_children(sender, instance: CategoryAttribute
     - On create: create the same attribute for all descendants and copy its values.
     - On update: update the fields on descendants and sync values additively.
     """
+    # Skip during fixtures (loaddata)
+    if kwargs.get("raw"):
+        return
+    
     parent_category = instance.category
     for child_category in _iter_descendant_categories(parent_category):
         child_attr = _ensure_child_attribute(instance, child_category)
@@ -90,6 +94,10 @@ def propagate_attribute_value_to_children(sender, instance: AttributeValue, crea
 
     Keeps value records (by value text) present on all child attributes.
     """
+    # Skip during fixtures (loaddata)
+    if kwargs.get("raw"):
+        return
+    
     parent_attr = instance.attribute
     parent_category = parent_attr.category
 
