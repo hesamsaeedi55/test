@@ -20,24 +20,25 @@ wheels/
 .installed.cfg
 *.egg
 
-# Django
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
-media/
-staticfiles/
-
 # Virtual Environment
 venv/
 ENV/
 env/
 
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+/media
+/staticfiles
+
 # IDE
-.idea/
 .vscode/
+.idea/
 *.swp
 *.swo
+*~
 
 # OS
 .DS_Store
@@ -46,18 +47,22 @@ Thumbs.db
 # Environment variables
 .env
 .env.local
-.env.*.local
 
-# Swift/Xcode
+# Node modules (if any)
+node_modules/
+
+# Swift files (iOS app - don't deploy these)
+*.swift
 *.xcodeproj
 *.xcworkspace
-*.xcuserdata
-DerivedData/
-build/
-*.swiftpm
 
-# Backup files
-*_FIXED.swift
-*_DEBUG.swift
-backup*/
-*.backup 
+# Documentation that shouldn't be in production
+*.md
+!README.md
+
+# Keep deployment files
+!render.yaml
+!.github/
+!build.sh
+!requirements.txt
+!DEPLOYMENT_VERSION.txt
