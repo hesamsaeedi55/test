@@ -1681,6 +1681,52 @@ def get_backup_status(request):
         'timestamp': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     })
 
+@staff_member_required
+def import_database_data(request):
+    """Import database data from database_export.json"""
+    from django.core.management import call_command
+    import os
+    from pathlib import Path
+    
+    if request.method == 'POST':
+        export_file = Path(settings.BASE_DIR).parent.parent / 'database_export.json'
+        
+        if not export_file.exists():
+            messages.error(request, f'Export file not found: {export_file}')
+            return render(request, 'shop/import_data.html', {
+                'error': f'File not found: {export_file}'
+            })
+        
+        try:
+            # Run migrations first
+            call_command('migrate', verbosity=0)
+            
+            # Import data
+            call_command('loaddata', str(export_file), verbosity=1)
+            
+            messages.success(request, '✅ Database data imported successfully!')
+            return redirect('admin:index')
+            
+        except Exception as e:
+            messages.error(request, f'❌ Import failed: {str(e)}')
+            import traceback
+            error_details = traceback.format_exc()
+            return render(request, 'shop/import_data.html', {
+                'error': str(e),
+                'details': error_details
+            })
+    
+    # GET request - show import page
+    export_file = Path(settings.BASE_DIR).parent.parent / 'database_export.json'
+    file_exists = export_file.exists()
+    file_size = export_file.stat().st_size / 1024 / 1024 if file_exists else 0
+    
+    return render(request, 'shop/import_data.html', {
+        'file_exists': file_exists,
+        'file_path': str(export_file),
+        'file_size': f'{file_size:.2f} MB'
+    })
+
 def api_categories(request):
     """
     Returns all categories (main and subcategories) with their id, name, parent (id and name if exists),

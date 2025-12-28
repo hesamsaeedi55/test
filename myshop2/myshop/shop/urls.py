@@ -159,6 +159,9 @@ urlpatterns = [
     # Admin Special Offers UI
     path('admin/offers/', views.admin_special_offers_view, name='admin_special_offers'),
     
+    # Database import/restore
+    path('admin/import-data/', views.import_database_data, name='import_database_data'),
+    
     # Products with Sale Info API
     path('api/products/with-sale-info/', ProductsWithSaleInfoAPIView.as_view(), name='api_products_with_sale_info'),
     

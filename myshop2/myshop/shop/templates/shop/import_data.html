@@ -1,0 +1,74 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}Import Database Data{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 20px auto; padding: 20px;">
+    <h1>🔄 Import Database Data</h1>
+    
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}" style="padding: 15px; margin: 10px 0; border-radius: 5px; 
+                {% if message.tags == 'error' %}background: #fee; border: 1px solid #fcc;{% else %}background: #efe; border: 1px solid #cfc;{% endif %}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+    
+    <div style="background: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
+        <h2>📋 Import Status</h2>
+        <p><strong>Export File:</strong> {{ file_path }}</p>
+        <p><strong>File Exists:</strong> 
+            {% if file_exists %}
+                <span style="color: green;">✅ Yes ({{ file_size }})</span>
+            {% else %}
+                <span style="color: red;">❌ No</span>
+            {% endif %}
+        </p>
+    </div>
+    
+    {% if error %}
+        <div style="background: #fee; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <h3 style="color: red;">❌ Error</h3>
+            <pre style="background: white; padding: 10px; overflow-x: auto;">{{ error }}</pre>
+            {% if details %}
+                <details>
+                    <summary>Full Error Details</summary>
+                    <pre style="background: white; padding: 10px; overflow-x: auto; max-height: 400px; overflow-y: auto;">{{ details }}</pre>
+                </details>
+            {% endif %}
+        </div>
+    {% endif %}
+    
+    {% if file_exists %}
+        <div style="background: #fff3cd; padding: 20px; border-radius: 8px; margin: 20px 0; border: 2px solid #ffc107;">
+            <h3>⚠️ Warning</h3>
+            <p>This will import data from <code>database_export.json</code> into your database.</p>
+            <ul>
+                <li>Make sure migrations are up to date</li>
+                <li>This will ADD data (won't delete existing data unless there are conflicts)</li>
+                <li>The import may take a few minutes</li>
+            </ul>
+        </div>
+        
+        <form method="post" style="margin-top: 30px;">
+            {% csrf_token %}
+            <button type="submit" style="background: #007bff; color: white; padding: 15px 30px; border: none; border-radius: 5px; font-size: 16px; cursor: pointer;">
+                🚀 Start Import
+            </button>
+            <a href="{% url 'admin:index' %}" style="margin-left: 10px; padding: 15px 30px; background: #6c757d; color: white; text-decoration: none; border-radius: 5px; display: inline-block;">
+                Cancel
+            </a>
+        </form>
+    {% else %}
+        <div style="background: #f8d7da; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3>❌ Export File Not Found</h3>
+            <p>The file <code>database_export.json</code> was not found at:</p>
+            <pre style="background: white; padding: 10px;">{{ file_path }}</pre>
+            <p>Make sure the file is in the repository root directory.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
