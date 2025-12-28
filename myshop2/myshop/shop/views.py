@@ -1725,8 +1725,47 @@ def import_database_data(request):
             # Clear all data - use flush (works for both SQLite and PostgreSQL)
             call_command('flush', '--no-input', verbosity=0)
             
-            # Import data
-            call_command('loaddata', str(export_file), verbosity=1)
+            # Clean the export file - remove duplicates
+            import json
+            with open(str(export_file), 'r') as f:
+                data = json.load(f)
+            
+            # Remove duplicates
+            seen = set()
+            unique_data = []
+            for obj in data:
+                model = obj['model']
+                fields = obj['fields']
+                
+                # Create unique key
+                if model == 'shop.categoryattribute':
+                    key = ('categoryattribute', fields.get('category'), fields.get('key'))
+                elif model == 'accounts.address':
+                    # Skip addresses with null customer
+                    if not fields.get('customer'):
+                        continue
+                    key = ('address', obj.get('pk'))
+                else:
+                    key = (model, obj.get('pk'))
+                
+                if key in seen:
+                    continue
+                
+                seen.add(key)
+                unique_data.append(obj)
+            
+            # Save cleaned data to temp file
+            import tempfile
+            temp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False)
+            json.dump(unique_data, temp_file, indent=2)
+            temp_file.close()
+            
+            # Import cleaned data
+            call_command('loaddata', temp_file.name, verbosity=1)
+            
+            # Clean up temp file
+            import os
+            os.unlink(temp_file.name)
             
             messages.success(request, '✅ Database cleared and data imported successfully!')
             return redirect('/')
