@@ -1688,13 +1688,31 @@ def import_database_data(request):
     import os
     from pathlib import Path
     
+    # Try multiple possible locations for the export file
+    possible_paths = [
+        Path(settings.BASE_DIR).parent.parent / 'database_export.json',  # Repository root
+        Path(settings.BASE_DIR) / 'database_export.json',  # In myshop2/myshop/
+        Path(settings.BASE_DIR).parent / 'database_export.json',  # In myshop2/
+        Path('/opt/render/project/src') / 'database_export.json',  # Render absolute path
+        Path('/opt/render/project/src/myshop2/myshop') / 'database_export.json',  # Render with rootDir
+    ]
+    
+    # Find the first existing file
+    export_file = None
+    for path in possible_paths:
+        if path.exists():
+            export_file = path
+            break
+    
     if request.method == 'POST':
-        export_file = Path(settings.BASE_DIR).parent.parent / 'database_export.json'
-        
-        if not export_file.exists():
-            messages.error(request, f'Export file not found: {export_file}')
+        if not export_file:
+            messages.error(request, 'Export file not found. Checked locations: ' + ', '.join([str(p) for p in possible_paths]))
             return render(request, 'shop/import_data.html', {
-                'error': f'File not found: {export_file}'
+                'error': 'File not found',
+                'file_exists': False,
+                'file_path': 'Not found',
+                'file_size': '0 MB',
+                'checked_paths': [str(p) for p in possible_paths]
             })
         
         try:
@@ -1713,18 +1731,22 @@ def import_database_data(request):
             error_details = traceback.format_exc()
             return render(request, 'shop/import_data.html', {
                 'error': str(e),
-                'details': error_details
+                'details': error_details,
+                'file_exists': True,
+                'file_path': str(export_file),
+                'file_size': f'{export_file.stat().st_size / 1024 / 1024:.2f} MB' if export_file.exists() else '0 MB'
             })
     
     # GET request - show import page
-    export_file = Path(settings.BASE_DIR).parent.parent / 'database_export.json'
-    file_exists = export_file.exists()
+    file_exists = export_file is not None
     file_size = export_file.stat().st_size / 1024 / 1024 if file_exists else 0
     
     return render(request, 'shop/import_data.html', {
         'file_exists': file_exists,
-        'file_path': str(export_file),
-        'file_size': f'{file_size:.2f} MB'
+        'file_path': str(export_file) if export_file else 'Not found',
+        'file_size': f'{file_size:.2f} MB',
+        'checked_paths': [str(p) for p in possible_paths],
+        'base_dir': str(settings.BASE_DIR)
     })
 
 def api_categories(request):

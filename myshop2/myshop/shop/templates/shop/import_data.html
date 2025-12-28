@@ -26,6 +26,19 @@
                 <span style="color: red;">❌ No</span>
             {% endif %}
         </p>
+        {% if base_dir %}
+        <p><strong>BASE_DIR:</strong> <code>{{ base_dir }}</code></p>
+        {% endif %}
+        {% if checked_paths %}
+        <details style="margin-top: 10px;">
+            <summary style="cursor: pointer; color: #007bff;">🔍 Show checked paths</summary>
+            <ul style="margin-top: 10px; padding-left: 20px;">
+                {% for path in checked_paths %}
+                <li><code>{{ path }}</code></li>
+                {% endfor %}
+            </ul>
+        </details>
+        {% endif %}
     </div>
     
     {% if error %}
@@ -64,9 +77,23 @@
     {% else %}
         <div style="background: #f8d7da; padding: 20px; border-radius: 8px; margin: 20px 0;">
             <h3>❌ Export File Not Found</h3>
-            <p>The file <code>database_export.json</code> was not found at:</p>
-            <pre style="background: white; padding: 10px;">{{ file_path }}</pre>
-            <p>Make sure the file is in the repository root directory.</p>
+            <p>The file <code>database_export.json</code> was not found.</p>
+            <p><strong>Please copy this information and share it:</strong></p>
+            <div style="background: white; padding: 15px; border-radius: 5px; margin: 10px 0;">
+                <p><strong>BASE_DIR:</strong> <code>{{ base_dir }}</code></p>
+                <p><strong>Checked paths:</strong></p>
+                <ul>
+                    {% for path in checked_paths %}
+                    <li><code>{{ path }}</code></li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <p style="margin-top: 15px;"><strong>To help fix this, please share:</strong></p>
+            <ul>
+                <li>The BASE_DIR value shown above</li>
+                <li>Any error messages from Render logs</li>
+                <li>What you see when visiting this page</li>
+            </ul>
         </div>
     {% endif %}
 </div>
