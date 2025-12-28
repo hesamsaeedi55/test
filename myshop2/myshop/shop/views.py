@@ -1689,12 +1689,15 @@ def import_database_data(request):
     from pathlib import Path
     
     # Try multiple possible locations for the export file
+    # On Render: repo is at /opt/render/project/src/, app runs from myshop2/myshop/
     possible_paths = [
-        Path(settings.BASE_DIR).parent.parent / 'database_export.json',  # Repository root
-        Path(settings.BASE_DIR) / 'database_export.json',  # In myshop2/myshop/
+        Path(settings.BASE_DIR).parent.parent / 'database_export.json',  # Repository root (most likely)
+        Path('/opt/render/project/src') / 'database_export.json',  # Render absolute repo root
+        Path('/opt/render/project/src/myshop2/myshop') / 'database_export.json',  # In app directory
+        Path(settings.BASE_DIR) / 'database_export.json',  # In myshop2/myshop/ (current dir)
         Path(settings.BASE_DIR).parent / 'database_export.json',  # In myshop2/
-        Path('/opt/render/project/src') / 'database_export.json',  # Render absolute path
-        Path('/opt/render/project/src/myshop2/myshop') / 'database_export.json',  # Render with rootDir
+        Path(os.getcwd()).parent.parent / 'database_export.json',  # From current working directory
+        Path(os.getcwd()) / 'database_export.json',  # Current working directory
     ]
     
     # Find the first existing file
