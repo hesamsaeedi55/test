@@ -3152,10 +3152,37 @@ def api_customer_cart(request):
             # Check if product has variants and require variant_id
             if hasattr(product, 'has_variants') and product.has_variants():
                 if not variant_id:
+                    # Get detailed variant information
+                    variants = product.variants.filter(is_active=True)
+                    variants_data = []
+                    for variant in variants:
+                        variant_info = {
+                            'id': variant.id,
+                            'sku': variant.sku,
+                            'price_toman': float(variant.price_toman),
+                            'stock_quantity': variant.stock_quantity,
+                            'attributes': variant.attributes,  # Includes color, size, etc.
+                        }
+                        # Add readable attribute descriptions
+                        if variant.attributes:
+                            variant_info['description'] = ', '.join([
+                                f"{k}: {v}" for k, v in variant.attributes.items()
+                            ])
+                        variants_data.append(variant_info)
+                    
                     return Response({
-                        'error': 'This product has variants. variant_id is required.',
+                        'error': 'This product has variants. You must select a variant before adding to cart.',
+                        'message': 'This product has multiple variants (e.g., different colors, sizes). Please select a variant and include variant_id in your request.',
                         'product_id': product_id,
-                        'available_variants': list(product.variants.filter(is_active=True).values('id', 'sku', 'price_toman'))
+                        'product_name': product.name,
+                        'available_variants': variants_data,
+                        'variants_count': len(variants_data),
+                        'instructions': {
+                            'step1': f'Get available variants: GET /shop/api/products/{product_id}/variants/',
+                            'step2': 'Select a variant from the list above',
+                            'step3': 'Add to cart with both product_id and variant_id: POST /shop/api/customer/cart/ with {"product_id": ' + str(product_id) + ', "variant_id": <selected_variant_id>, "quantity": 1}'
+                        },
+                        'api_endpoint': f'/shop/api/products/{product_id}/variants/'
                     }, status=status.HTTP_400_BAD_REQUEST)
             
             # Use database transaction with locking to prevent race conditions
