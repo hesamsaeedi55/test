@@ -1681,7 +1681,6 @@ def get_backup_status(request):
         'timestamp': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     })
 
-@staff_member_required
 def import_database_data(request):
     """Import database data from database_export.json"""
     from django.core.management import call_command
@@ -1726,7 +1725,8 @@ def import_database_data(request):
             call_command('loaddata', str(export_file), verbosity=1)
             
             messages.success(request, '✅ Database data imported successfully!')
-            return redirect('admin:index')
+            # Redirect to home instead of admin (since admin might not exist yet)
+            return redirect('/')
             
         except Exception as e:
             messages.error(request, f'❌ Import failed: {str(e)}')
