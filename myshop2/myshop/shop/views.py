@@ -1725,26 +1725,45 @@ def import_database_data(request):
             # Clear all data - use flush (works for both SQLite and PostgreSQL)
             call_command('flush', '--no-input', verbosity=0)
             
-            # Clean the export file - remove duplicates
+            # Clean the export file - remove duplicates and problematic entries
             import json
             with open(str(export_file), 'r') as f:
                 data = json.load(f)
             
-            # Remove duplicates
+            # Get valid customer emails/IDs first
+            valid_customers = set()
+            for obj in data:
+                if obj['model'] == 'accounts.customer':
+                    # Get customer email (natural key)
+                    email = obj['fields'].get('email')
+                    if email:
+                        valid_customers.add(email)
+                    # Also track by pk
+                    if obj.get('pk'):
+                        valid_customers.add(obj.get('pk'))
+            
+            # Remove duplicates and invalid entries
             seen = set()
             unique_data = []
             for obj in data:
                 model = obj['model']
                 fields = obj['fields']
                 
+                # Skip addresses with invalid customer references
+                if model == 'accounts.address':
+                    customer_ref = fields.get('customer')
+                    if isinstance(customer_ref, list) and customer_ref:
+                        # Natural key - check if email exists
+                        if customer_ref[0] not in valid_customers:
+                            continue
+                    elif customer_ref not in valid_customers:
+                        continue
+                    elif not customer_ref:
+                        continue
+                
                 # Create unique key
                 if model == 'shop.categoryattribute':
                     key = ('categoryattribute', fields.get('category'), fields.get('key'))
-                elif model == 'accounts.address':
-                    # Skip addresses with null customer
-                    if not fields.get('customer'):
-                        continue
-                    key = ('address', obj.get('pk'))
                 else:
                     key = (model, obj.get('pk'))
                 
