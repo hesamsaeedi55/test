@@ -1597,9 +1597,6 @@ def add_product(request):
                 'id': variant.id,
                 'sku': variant.sku,
                 'attributes': variant.attributes,
-                'color': variant.attributes.get('color', ''),
-                'size': variant.attributes.get('size', ''),
-                'material': variant.attributes.get('material', ''),
                 'price_toman': float(variant.price_toman),  # Convert Decimal to float
                 'stock_quantity': variant.stock_quantity,
                 'is_active': variant.is_active,
