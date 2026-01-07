@@ -183,6 +183,7 @@ urlpatterns = [
     path('api/customer/cart/add/', views.api_customer_cart_add, name='api_customer_cart_add'),
     path('api/customer/cart/update/', views.api_customer_cart_update, name='api_customer_cart_update'),
     path('api/customer/cart/remove/', views.api_customer_cart_remove, name='api_customer_cart_remove'),
+    path('api/customer/find-variant/', views.api_find_variant_by_attributes, name='api_find_variant_by_attributes'),
     path('api/customer/checkout/', views.api_customer_checkout, name='api_customer_checkout'),
     path('api/customer/orders/', views.api_customer_orders, name='api_customer_orders'),
     path('api/customer/orders/<int:order_id>/', views.api_customer_order_detail, name='api_customer_order_detail'),

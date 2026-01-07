@@ -4037,3 +4037,95 @@ def api_debug_add_to_cart(request):
     except Exception as e:
         print(f"❌ Error in api_debug_add_to_cart: {str(e)}")
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@csrf_exempt
+def api_find_variant_by_attributes(request):
+    """
+    Find the correct variant_id based on product_id and attributes.
+    
+    POST /shop/api/customer/find-variant/
+    Body: {
+        "product_id": 374,
+        "attributes": {
+            "color": "مشکی",
+            "size": "M"
+        }
+    }
+    
+    Returns: {
+        "variant_id": 196,
+        "sku": "جکت-341",
+        "price_toman": 500000,
+        "stock_quantity": 10,
+        "attributes": {"color": "مشکی", "size": "M"}
+    }
+    """
+    try:
+        data = request.data
+        product_id = data.get('product_id')
+        requested_attributes = data.get('attributes', {})
+        
+        if not product_id:
+            return Response({'error': 'product_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if not requested_attributes:
+            return Response({'error': 'attributes are required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Get product
+        try:
+            product = Product.objects.get(id=product_id, is_active=True)
+        except Product.DoesNotExist:
+            return Response({'error': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Find matching variant
+        variants = ProductVariant.objects.filter(product=product, is_active=True)
+        
+        print(f"🔍 Finding variant for product {product_id} with attributes: {requested_attributes}")
+        print(f"   Found {variants.count()} active variants")
+        
+        matching_variant = None
+        for variant in variants:
+            print(f"   Checking variant {variant.id}: {variant.attributes}")
+            
+            # Check if all requested attributes match this variant's attributes
+            if all(variant.attributes.get(key) == value for key, value in requested_attributes.items()):
+                matching_variant = variant
+                print(f"   ✅ MATCH FOUND: Variant {variant.id}")
+                break
+        
+        if not matching_variant:
+            # Return detailed error with available variants
+            available_variants = []
+            for v in variants:
+                available_variants.append({
+                    'id': v.id,
+                    'sku': v.sku,
+                    'attributes': v.attributes,
+                    'price_toman': float(v.price_toman),
+                    'stock_quantity': v.stock_quantity
+                })
+            
+            return Response({
+                'error': 'No variant found matching the requested attributes',
+                'requested_attributes': requested_attributes,
+                'available_variants': available_variants
+            }, status=status.HTTP_404_NOT_FOUND)
+        
+        # Return the matching variant
+        return Response({
+            'variant_id': matching_variant.id,
+            'sku': matching_variant.sku,
+            'price_toman': float(matching_variant.price_toman),
+            'stock_quantity': matching_variant.stock_quantity,
+            'attributes': matching_variant.attributes,
+            'is_active': matching_variant.is_active,
+            'is_default': matching_variant.is_default
+        })
+        
+    except Exception as e:
+        import traceback
+        print(f"❌ Error in api_find_variant_by_attributes: {str(e)}")
+        print(f"📋 Traceback: {traceback.format_exc()}")
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
