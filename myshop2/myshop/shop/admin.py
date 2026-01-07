@@ -1002,10 +1002,20 @@ class ProductImageAdmin(admin.ModelAdmin):
 
 class OrderItemInline(admin.TabularInline):
     model = OrderItem
-    raw_id_fields = ['product']
+    raw_id_fields = ['product', 'variant']
     extra = 0
-    fields = ['product', 'price', 'quantity', 'get_total']
-    readonly_fields = ['get_total']
+    fields = ['product', 'variant', 'get_variant_details', 'price', 'quantity', 'get_total']
+    readonly_fields = ['get_variant_details', 'get_total']
+    
+    def get_variant_details(self, obj):
+        if obj.variant:
+            # Display variant attributes in a readable format
+            attrs = []
+            for key, value in obj.variant.attributes.items():
+                attrs.append(f"{key}: {value}")
+            return " | ".join(attrs) if attrs else obj.variant.sku
+        return "-"
+    get_variant_details.short_description = 'Variant Details'
     
     def get_total(self, obj):
         if obj.pk:
@@ -1030,11 +1040,17 @@ class OrderAdmin(admin.ModelAdmin):
 
 
 class OrderItemAdmin(admin.ModelAdmin):
-    list_display = ['id', 'order', 'product', 'price', 'quantity', 'get_total']
+    list_display = ['id', 'order', 'product', 'get_variant_info', 'price', 'quantity', 'get_total']
     list_filter = ['order', 'order__paid', 'order__created']
-    search_fields = ['product__name', 'order__email', 'order__first_name', 'order__last_name']
-    raw_id_fields = ['order', 'product']
+    search_fields = ['product__name', 'order__email', 'order__first_name', 'order__last_name', 'variant__sku']
+    raw_id_fields = ['order', 'product', 'variant']
     readonly_fields = ['get_total']
+    
+    def get_variant_info(self, obj):
+        if obj.variant:
+            return obj.variant.sku
+        return "-"
+    get_variant_info.short_description = 'Variant'
     
     def get_total(self, obj):
         if obj.pk:
