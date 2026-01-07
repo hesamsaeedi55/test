@@ -3581,6 +3581,7 @@ def api_customer_checkout(request):
                 OrderItem.objects.create(
                     order=order,
                     product=cart_item.product,
+                    variant=cart_item.variant,  # Include variant from cart
                     price=unit_price,
                     quantity=cart_item.quantity
                 )
