@@ -1297,7 +1297,12 @@ def add_product(request):
                                             sku_val = variant_data.get('sku', '') or ''
                                             incoming_skus.add(sku_val)
                                             attrs_val = variant_data.get('attributes', {}) or {}
-                                            price_val = variant_data.get('priceToman', product.price_toman)
+                                            # If variant price is empty, 0, '0', or not provided, use product's base price
+                                            raw_price = variant_data.get('priceToman')
+                                            try:
+                                                price_val = float(raw_price) if raw_price and float(raw_price) > 0 else product.price_toman
+                                            except (ValueError, TypeError):
+                                                price_val = product.price_toman
                                             stock_val = variant_data.get('stock', 0)
                                             is_active_val = variant_data.get('isActive', True)
                                             is_default_val = variant_data.get('isDefault', False)
