@@ -1001,6 +1001,10 @@ class ProductImageAdmin(admin.ModelAdmin):
         return form
 
 class OrderItemInline(admin.TabularInline):
+    """
+    Inline admin for order items - displays product, variant, price, and quantity.
+    Shows variant details (attributes like color, size) in a readable format.
+    """
     model = OrderItem
     raw_id_fields = ['product', 'variant']
     extra = 0
