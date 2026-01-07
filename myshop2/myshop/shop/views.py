@@ -3119,6 +3119,12 @@ def api_customer_cart(request):
             variant_id = data.get('variant_id')
             quantity = int(data.get('quantity', 1))
             
+            # DEBUG: Log what variant_id is being received
+            print(f"🔍 ADD TO CART DEBUG:")
+            print(f"   Product ID: {product_id}")
+            print(f"   Variant ID: {variant_id} (type: {type(variant_id)})")
+            print(f"   Quantity: {quantity}")
+            
             # Import models needed for POST
             from .models import CartItem, Product, ProductVariant
             
@@ -3207,8 +3213,13 @@ def api_customer_cart(request):
                             product=product, 
                             is_active=True
                         )
+                        # DEBUG: Log which variant was found
+                        print(f"✅ Variant found: ID={variant.id}, SKU={variant.sku}, Attributes={variant.attributes}")
                     except ProductVariant.DoesNotExist:
+                        print(f"❌ Variant ID {variant_id} not found for product {product_id}")
                         return Response({'error': 'Variant not found'}, status=status.HTTP_404_NOT_FOUND)
+                else:
+                    print(f"⚠️  No variant_id provided for product {product_id}")
                 
                 # Check stock availability WITH LOCK held (prevents race condition)
                 if variant and hasattr(variant, 'stock_quantity'):
@@ -3252,6 +3263,13 @@ def api_customer_cart(request):
                         'unit_price': unit_price
                     }
                 )
+                
+                # DEBUG: Log what happened
+                variant_info = f"Variant ID={variant.id}, Attributes={variant.attributes}" if variant else "No variant"
+                if item_created:
+                    print(f"🆕 Created NEW cart item: Product={product.id}, {variant_info}, Qty={quantity}")
+                else:
+                    print(f"📝 Found EXISTING cart item: ID={cart_item.id}, Product={product.id}, {variant_info}, Old Qty={cart_item.quantity}")
                 
                 if not item_created:
                     # Update existing item - check if new quantity exceeds limits
